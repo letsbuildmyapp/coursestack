@@ -1,12 +1,12 @@
 {
   "projects": {
-    "default": "coursestack-demo"
+    "default": "coursestack-8f29a"
   },
   "targets": {
-    "coursestack-demo": {
+    "coursestack-8f29a": {
       "hosting": {
         "staging": ["coursestack-staging"],
-        "prod": ["coursestack"]
+        "prod": ["coursestack-8f29a"]
       }
     }
   }
