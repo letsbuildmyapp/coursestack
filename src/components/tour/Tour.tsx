@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
 import type { Role } from '@/types';
 
 type Placement = 'right' | 'left' | 'top' | 'bottom';
@@ -136,6 +137,18 @@ export function Tour() {
       return () => clearTimeout(t);
     }
     return undefined;
+  }, [user, storageKey]);
+
+  // Programmatic replay — fires from anywhere via window.dispatchEvent(new Event('coursestack:replay-tour'))
+  useEffect(() => {
+    if (!user) return;
+    function onReplay() {
+      window.localStorage.removeItem(storageKey);
+      setStep(0);
+      setOpen(true);
+    }
+    window.addEventListener('coursestack:replay-tour', onReplay);
+    return () => window.removeEventListener('coursestack:replay-tour', onReplay);
   }, [user, storageKey]);
 
   const close = useCallback(() => {
@@ -271,9 +284,11 @@ const TooltipCard = forwardRef<
     onJump: (i: number) => void;
   }
 >(({ step, stepIndex, total, useSpotlight, rect, placement, onPrev, onNext, onClose, onJump }, ref) => {
-  const style: React.CSSProperties = {};
+  // Compute spotlight-mode position; modal mode is centered by a wrapping flex container so
+  // Framer Motion's animated transform doesn't conflict with CSS centering.
+  let spotlightStyle: React.CSSProperties | null = null;
   if (useSpotlight && rect) {
-    const card = { w: 320, h: 220 };
+    const card = { w: 320, h: 240 };
     const margin = 16;
     let top = 0;
     let left = 0;
@@ -299,23 +314,42 @@ const TooltipCard = forwardRef<
       const inY = top >= 8 && top + card.h <= window.innerHeight - 8;
       if (inX && inY) break;
     }
-    style.top = Math.max(8, Math.min(window.innerHeight - card.h - 8, top));
-    style.left = Math.max(8, Math.min(window.innerWidth - card.w - 8, left));
-  } else {
-    style.top = '50%';
-    style.left = '50%';
-    style.transform = 'translate(-50%, -50%)';
+    spotlightStyle = {
+      top: Math.max(8, Math.min(window.innerHeight - card.h - 8, top)),
+      left: Math.max(8, Math.min(window.innerWidth - card.w - 8, left)),
+    };
   }
 
-  return (
+  const cardClass =
+    'w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-md border border-ink bg-paper shadow-2xl';
+
+  // Spotlight mode: absolutely positioned by computed top/left, animate scale only.
+  // Modal mode: positioned at left:50%/top:50% and offset by -50%/-50% via motion x/y so
+  // Framer Motion composes them into its animated transform (a manual `transform: translate(-50%,-50%)`
+  // would be overwritten on every animation frame).
+  const motionProps = useSpotlight
+    ? {
+        initial: { opacity: 0, scale: 0.96 },
+        animate: { opacity: 1, scale: 1 },
+        exit: { opacity: 0, scale: 0.96 },
+      }
+    : {
+        initial: { opacity: 0, scale: 0.96, x: '-50%', y: '-50%' },
+        animate: { opacity: 1, scale: 1, x: '-50%', y: '-50%' },
+        exit: { opacity: 0, scale: 0.96, x: '-50%', y: '-50%' },
+      };
+
+  const card = (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.96 }}
+      {...motionProps}
       transition={{ type: 'spring', stiffness: 360, damping: 30 }}
-      className="fixed z-[130] w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-md border border-ink bg-paper shadow-2xl"
-      style={style}
+      className={cn(
+        'fixed z-[130]',
+        cardClass,
+        useSpotlight ? null : 'left-1/2 top-1/2',
+      )}
+      style={spotlightStyle ?? undefined}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-start justify-between gap-3 border-b border-rule bg-paper-soft px-5 py-3">
@@ -358,5 +392,7 @@ const TooltipCard = forwardRef<
       </div>
     </motion.div>
   );
+
+  return card;
 });
 TooltipCard.displayName = 'TooltipCard';

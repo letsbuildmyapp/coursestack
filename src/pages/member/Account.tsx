@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, CreditCard } from 'lucide-react';
+import { Check, CreditCard, Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/input';
@@ -34,6 +34,7 @@ export function Account({ section }: { section?: 'billing' }) {
         <div ref={billingRef} className="scroll-mt-20">
           <Billing />
         </div>
+        <Preferences />
       </div>
     </AppShell>
   );
@@ -142,6 +143,46 @@ function Billing() {
           </div>
           <Button variant="outline" className="ml-auto" onClick={() => toast.message('Stripe Customer Portal would open now.')}>
             Open portal
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Preferences() {
+  const { user } = useAuth();
+  if (!user) return null;
+  const role = user.roles.includes('admin')
+    ? 'admin'
+    : user.roles.includes('instructor')
+    ? 'instructor'
+    : 'member';
+
+  function replayTour() {
+    window.localStorage.removeItem(`coursestack:tutorial_seen:${role}`);
+    window.dispatchEvent(new Event('coursestack:replay-tour'));
+    toast.success('Tour restarted.');
+  }
+
+  return (
+    <section className="mt-12">
+      <p className="eyebrow">Preferences</p>
+      <h2 className="mt-1 font-display text-title1 leading-tight">Onboarding.</h2>
+      <p className="mt-2 text-footnote text-ink-mute">
+        The first-run tour. Plays once per role per device, then quietly retires.
+      </p>
+      <div className="mt-4 rounded-md border border-rule bg-paper-soft p-5">
+        <div className="flex items-center gap-3">
+          <Sparkles className="size-5 text-terra" />
+          <div>
+            <p className="text-headline">Replay the tour</p>
+            <p className="text-caption text-ink-mute">
+              Resets the <code className="font-mono text-ink">tutorial_seen:{role}</code> flag and re-opens it.
+            </p>
+          </div>
+          <Button variant="terra" className="ml-auto" onClick={replayTour}>
+            Replay tour
           </Button>
         </div>
       </div>

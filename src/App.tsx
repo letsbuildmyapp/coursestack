@@ -66,7 +66,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Tour />
-          <Toaster richColors position="bottom-right" />
+          <Toaster richColors closeButton position="bottom-right" />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
