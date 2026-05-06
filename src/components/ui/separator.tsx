@@ -1,0 +1,21 @@
+import * as RadixSeparator from '@radix-ui/react-separator';
+import { forwardRef } from 'react';
+import { cn } from '@/lib/utils';
+
+export const Separator = forwardRef<
+  HTMLDivElement,
+  React.ComponentPropsWithoutRef<typeof RadixSeparator.Root>
+>(({ className, orientation = 'horizontal', decorative = true, ...props }, ref) => (
+  <RadixSeparator.Root
+    ref={ref}
+    decorative={decorative}
+    orientation={orientation}
+    className={cn(
+      'shrink-0 bg-rule',
+      orientation === 'horizontal' ? 'h-px w-full' : 'h-full w-px',
+      className,
+    )}
+    {...props}
+  />
+));
+Separator.displayName = 'Separator';

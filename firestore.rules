@@ -1,0 +1,128 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function userDoc(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function meDoc() {
+      return userDoc(uid());
+    }
+
+    function hasRole(role) {
+      return signedIn() && role in meDoc().roles;
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function isInstructor() {
+      return hasRole('instructor');
+    }
+
+    function isMember() {
+      return hasRole('member');
+    }
+
+    function tierRank(t) {
+      return t == 'team' ? 3 : (t == 'pro' ? 2 : 1);
+    }
+
+    function activeSub() {
+      let me = meDoc();
+      return me.subscriptionStatus == 'active' || me.subscriptionStatus == 'trialing';
+    }
+
+    function tierGrants(courseTier) {
+      let me = meDoc();
+      return tierRank(me.tier) >= tierRank(courseTier);
+    }
+
+    // Users can read their own doc + admins read all. Self-write limited fields.
+    match /users/{userId} {
+      allow read: if signedIn() && (uid() == userId || isAdmin());
+      allow create: if signedIn() && uid() == userId
+        && request.resource.data.roles.hasOnly(['member'])
+        && request.resource.data.tier == 'free'
+        && request.resource.data.subscriptionStatus == 'none';
+      allow update: if isAdmin() ||
+        (signedIn() && uid() == userId
+          && request.resource.data.roles == resource.data.roles
+          && request.resource.data.tier == resource.data.tier
+          && request.resource.data.subscriptionStatus == resource.data.subscriptionStatus);
+      allow delete: if isAdmin();
+
+      match /progress/{courseId} {
+        allow read, write: if signedIn() && uid() == userId;
+        allow read: if isAdmin() || (isInstructor() &&
+          get(/databases/$(database)/documents/courses/$(courseId)).data.instructorId == uid());
+      }
+
+      match /enrollments/{courseId} {
+        allow read, write: if signedIn() && uid() == userId;
+        allow read: if isAdmin();
+      }
+
+      match /notes/{noteId} {
+        allow read, write: if signedIn() && uid() == userId;
+      }
+
+      match /chats/{chatId} {
+        allow read, write: if signedIn() && uid() == userId;
+      }
+    }
+
+    // Public catalog: list/read published courses; only the owning instructor or admin can write.
+    match /courses/{courseId} {
+      allow read: if resource.data.published == true || isAdmin() ||
+        (isInstructor() && resource.data.instructorId == uid());
+      allow create: if isInstructor() && request.resource.data.instructorId == uid();
+      allow update, delete: if isAdmin() ||
+        (isInstructor() && resource.data.instructorId == uid());
+
+      match /modules/{moduleId} {
+        allow read: if get(/databases/$(database)/documents/courses/$(courseId)).data.published == true || isAdmin() ||
+          (isInstructor() && get(/databases/$(database)/documents/courses/$(courseId)).data.instructorId == uid());
+        allow write: if isAdmin() ||
+          (isInstructor() && get(/databases/$(database)/documents/courses/$(courseId)).data.instructorId == uid());
+
+        match /lessons/{lessonId} {
+          // Lesson content is gated: free preview is open to anyone signed in; otherwise tier must match.
+          allow read: if isAdmin() ||
+            (isInstructor() && get(/databases/$(database)/documents/courses/$(courseId)).data.instructorId == uid()) ||
+            (signedIn() && (
+              resource.data.isFreePreview == true ||
+              (activeSub() && tierGrants(get(/databases/$(database)/documents/courses/$(courseId)).data.tier))
+            ));
+          allow write: if isAdmin() ||
+            (isInstructor() && get(/databases/$(database)/documents/courses/$(courseId)).data.instructorId == uid());
+        }
+      }
+    }
+
+    // Cached AI summaries — readable by signed-in users, written only by Functions (admin SDK bypasses rules).
+    match /aiSummaries/{summaryId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Server-only: Stripe events log, rate limit counters
+    match /stripeEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /rateLimits/{key} {
+      allow read, write: if false;
+    }
+  }
+}

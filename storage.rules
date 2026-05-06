@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function isImage() { return request.resource.contentType.matches('image/.*'); }
+    function under5MB() { return request.resource.size < 5 * 1024 * 1024; }
+
+    // User avatars
+    match /avatars/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if signedIn() && uid() == userId && isImage() && under5MB();
+    }
+
+    // Course covers — only instructors uploading to their own course paths, admins can do anything
+    match /courses/{courseId}/cover {
+      allow read: if true;
+      allow write: if signedIn() && isImage() && under5MB();
+    }
+
+    // Lesson assets (instructor-uploaded video posters etc.)
+    match /lessons/{lessonId}/{file} {
+      allow read: if true;
+      allow write: if signedIn() && under5MB();
+    }
+  }
+}

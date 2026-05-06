@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "coursestack-demo"
+  },
+  "targets": {
+    "coursestack-demo": {
+      "hosting": {
+        "staging": ["coursestack-staging"],
+        "prod": ["coursestack"]
+      }
+    }
+  }
+}
