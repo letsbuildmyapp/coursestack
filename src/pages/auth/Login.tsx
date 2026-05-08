@@ -1,158 +1,164 @@
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { ArrowRight, Loader2, Crown, Users, Sparkles, GraduationCap, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { SEED_PASSWORD } from '@/data/seed';
 
-const schema = z.object({
-  email: z.string().email('Enter a valid email.'),
-  password: z.string().min(1, 'Password is required.'),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 const DEMO_LOGINS = [
-  { email: 'pro@coursestack.demo', label: 'Member · Pro tier' },
-  { email: 'team@coursestack.demo', label: 'Member · Team tier' },
-  { email: 'free@coursestack.demo', label: 'Member · Free tier' },
-  { email: 'ada@coursestack.demo', label: 'Instructor' },
-  { email: 'admin@coursestack.demo', label: 'Admin' },
+  { email: 'pro@coursestack.demo', password: SEED_PASSWORD, label: 'Pro Member', description: 'Pro tier — all courses', icon: Crown, color: 'from-amber-500 to-orange-500' },
+  { email: 'team@coursestack.demo', password: SEED_PASSWORD, label: 'Team Member', description: 'Team tier — shared seats', icon: Users, color: 'from-emerald-500 to-teal-500' },
+  { email: 'free@coursestack.demo', password: SEED_PASSWORD, label: 'Free Member', description: 'Free tier — limited access', icon: Sparkles, color: 'from-sky-500 to-cyan-500' },
+  { email: 'ada@coursestack.demo', password: SEED_PASSWORD, label: 'Instructor', description: 'Ada — course author', icon: GraduationCap, color: 'from-violet-500 to-fuchsia-500' },
+  { email: 'admin@coursestack.demo', password: SEED_PASSWORD, label: 'Admin', description: 'Platform admin', icon: ShieldCheck, color: 'from-indigo-500 to-violet-500' },
 ];
 
 export function Login() {
-  const { signIn, signInWithGoogle, loading } = useAuth();
+  const { signIn, loading } = useAuth();
   const nav = useNavigate();
   const loc = useLocation();
   const intended = (loc.state as { from?: string } | null)?.from ?? '/dashboard';
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
-  });
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [authErr, setAuthErr] = useState<string | null>(null);
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setAuthErr(null);
+    setSubmitting(true);
     try {
-      await signIn(values.email, values.password);
-      toast.success(`Welcome back.`);
+      await signIn(email, password);
+      toast.success('Welcome back.');
       nav(intended);
     } catch (e: any) {
       setAuthErr(e.message ?? 'Sign in failed.');
+    } finally {
+      setSubmitting(false);
     }
   }
 
-  function fillDemo(email: string) {
-    setValue('email', email);
-    setValue('password', SEED_PASSWORD);
+  async function onDemoLogin(d: (typeof DEMO_LOGINS)[number]) {
+    setEmail(d.email);
+    setPassword(d.password);
+    setDemoLoading(d.email);
+    setAuthErr(null);
+    try {
+      await signIn(d.email, d.password);
+      toast.success(`Signed in as ${d.label}`);
+      nav(intended);
+    } catch (e: any) {
+      setAuthErr(e.message ?? 'Sign in failed.');
+    } finally {
+      setDemoLoading(null);
+    }
   }
 
   return (
-    <div className="grid min-h-screen md:grid-cols-2">
-      <aside className="hidden md:flex flex-col justify-between border-r border-rule bg-paper-soft p-10">
-        <Link to="/" className="font-display text-title2">CourseStack</Link>
-        <div className="max-w-md">
-          <p className="eyebrow">Returning member</p>
-          <h1 className="mt-3 font-display text-largeTitle leading-tight">
-            Pick up where you left off.
-          </h1>
-          <p className="mt-4 text-body text-ink-soft">
-            Your bookmarks, notes, and progress are exactly where you parked them.
-          </p>
-        </div>
-        <p className="text-caption text-ink-mute num">Vol. I · Issue 03</p>
-      </aside>
+    <div className="relative flex min-h-screen flex-col bg-paper">
+      <header className="relative z-10 flex items-center justify-between px-6 py-5 sm:px-10">
+        <Link to="/" className="font-display text-title2 tracking-tight">CourseStack</Link>
+        <span className="text-caption text-ink-mute">
+          Need help?{' '}
+          <a href="mailto:hello@letsbuildmyapp.com?subject=CourseStack%20support" className="text-ink underline-offset-4 hover:underline">
+            Contact support
+          </a>
+        </span>
+      </header>
 
-      <main className="flex flex-col items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
-          <p className="eyebrow">Sign in</p>
-          <h1 className="mt-2 font-display text-title1 leading-tight">Welcome back.</h1>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" {...register('email')} className="mt-1.5" />
-              {errors.email && <p className="mt-1 text-caption text-danger">{errors.email.message}</p>}
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link to="/forgot" className="text-caption text-ink-mute hover:text-terra-deep">
-                  Forgot?
+      <main className="relative z-10 flex flex-1 items-center justify-center px-6 py-10">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-[440px]"
+        >
+          <Card className="border-rule bg-paper-soft p-8 shadow-2xl">
+            <div className="space-y-1.5">
+              <h1 className="font-display text-title1 leading-tight">Sign in to CourseStack</h1>
+              <p className="text-caption text-ink-mute">
+                New here?{' '}
+                <Link to="/signup" className="font-medium text-ink underline-offset-4 hover:underline decoration-terra decoration-2">
+                  Make an account
                 </Link>
-              </div>
-              <Input id="password" type="password" autoComplete="current-password" {...register('password')} className="mt-1.5" />
-              {errors.password && <p className="mt-1 text-caption text-danger">{errors.password.message}</p>}
+              </p>
             </div>
-            {authErr && (
-              <div className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-footnote text-danger">
-                {authErr}
+
+            <div className="my-6 grid gap-2">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="eyebrow">One-click demo logins</span>
+                <span className="text-[10px] text-ink-mute">No password needed</span>
               </div>
-            )}
-            <Button type="submit" variant="terra" size="lg" className="w-full" disabled={isSubmitting || loading}>
-              {isSubmitting || loading ? 'Signing in…' : 'Sign in'}
-            </Button>
-          </form>
-
-          <div className="my-6 flex items-center gap-3 text-caption text-ink-mute">
-            <span className="h-px flex-1 bg-rule" />
-            or
-            <span className="h-px flex-1 bg-rule" />
-          </div>
-
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={async () => {
-              try {
-                await signInWithGoogle();
-                nav(intended);
-              } catch (e: any) {
-                setAuthErr(e.message);
-              }
-            }}
-          >
-            Continue with Google
-          </Button>
-
-          <p className="mt-8 text-footnote text-ink-mute">
-            New here?{' '}
-            <Link to="/signup" className="font-medium text-ink underline-offset-4 hover:underline decoration-terra decoration-2">
-              Make an account
-            </Link>
-          </p>
-
-          <div className="mt-10 rounded-md border border-rule bg-paper-soft p-4">
-            <p className="eyebrow">Demo accounts</p>
-            <p className="mt-2 text-caption text-ink-mute">Click any to autofill — password is <code className="font-mono text-ink">{SEED_PASSWORD}</code>.</p>
-            <ul className="mt-3 space-y-1.5">
               {DEMO_LOGINS.map((d) => (
-                <li key={d.email}>
-                  <button
-                    type="button"
-                    onClick={() => fillDemo(d.email)}
-                    className="w-full text-left text-caption text-ink-soft hover:text-terra-deep"
-                  >
-                    <span className="num">{d.email}</span>
-                    <span className="ml-2 text-ink-mute">— {d.label}</span>
-                  </button>
-                </li>
+                <button
+                  key={d.email}
+                  type="button"
+                  onClick={() => onDemoLogin(d)}
+                  disabled={demoLoading !== null || submitting}
+                  className="group flex items-center gap-3 rounded-md border border-rule bg-paper p-3 text-left transition-all hover:border-terra hover:bg-paper-soft disabled:opacity-50"
+                >
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br ${d.color} text-white shadow-sm`}>
+                    <d.icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium">{d.label}</div>
+                    <div className="truncate text-caption text-ink-mute">{d.description}</div>
+                  </div>
+                  {demoLoading === d.email ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-ink-mute" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4 text-ink-mute transition-transform group-hover:translate-x-0.5" />
+                  )}
+                </button>
               ))}
-            </ul>
-          </div>
-        </div>
+            </div>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-rule" />
+              </div>
+              <div className="relative flex justify-center text-caption uppercase tracking-wider">
+                <span className="bg-paper-soft px-3 text-ink-mute">or sign in with email</span>
+              </div>
+            </div>
+
+            <form onSubmit={onSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" placeholder="you@company.com" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link to="/forgot" className="text-caption text-ink-mute hover:text-terra-deep">
+                    Forgot?
+                  </Link>
+                </div>
+                <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1.5" placeholder="••••••••" />
+              </div>
+              {authErr && (
+                <div className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-footnote text-danger">{authErr}</div>
+              )}
+              <Button type="submit" variant="terra" size="lg" className="w-full" disabled={submitting || loading}>
+                {submitting || loading ? <Loader2 className="size-4 animate-spin" /> : 'Sign in'}
+              </Button>
+            </form>
+          </Card>
+        </motion.div>
       </main>
+
+      <footer className="relative z-10 px-6 pb-8 text-center text-caption text-ink-mute sm:px-10">
+        <a href="https://letsbuildmyapp.com" target="_blank" rel="noreferrer" className="font-medium text-ink underline-offset-4 hover:underline">
+          Let&apos;s Build My App
+        </a>
+      </footer>
     </div>
   );
 }
