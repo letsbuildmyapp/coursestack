@@ -92,7 +92,7 @@ export function NewCourse() {
         <div>
           <h1 className="font-display text-largeTitle leading-tight">Outline a course in a minute.</h1>
           <p className="mt-2 text-body text-ink-soft">
-            Tell the assistant the topic and the reader. It drafts a 2–4 module outline using <code className="text-ink">claude-opus-4-7</code>. You review, edit, and one-click create the structure.
+            Tell the assistant the topic and the reader. It drafts a 2–4 module outline. You review, edit, and one-click create the structure.
           </p>
 
           <div className="mt-6 space-y-4 rounded-md border border-rule bg-paper-soft p-5" data-tour="outline-input">

@@ -15,7 +15,7 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-The app boots in **demo mode** — an in-memory + localStorage-backed data store that exercises every flow without needing Firebase / Stripe / Anthropic credentials. The Sign-In page lists pre-seeded accounts you can click to autofill (password is always `coursestack`):
+The app boots in **demo mode** — an in-memory + localStorage-backed data store that exercises every flow without needing Firebase / Stripe / LLM credentials. The Sign-In page lists pre-seeded accounts you can click to autofill (password is always `coursestack`):
 
 | Email                          | Roles                | Tier  |
 |--------------------------------|----------------------|-------|
@@ -119,7 +119,7 @@ VITE_STRIPE_PUBLISHABLE_KEY=
 **Never put server secrets in `VITE_*` vars** — they get bundled into the browser. Server secrets live in Firebase Functions config:
 
 ```bash
-firebase functions:secrets:set ANTHROPIC_API_KEY
+firebase functions:secrets:set LLM_API_KEY
 firebase functions:secrets:set STRIPE_SECRET_KEY
 firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
 firebase functions:secrets:set STRIPE_PRICE_PRO     # price_xxx for $29 plan
@@ -204,8 +204,8 @@ These were decisions made autonomously to ship the demo. None are load-bearing �
 
 Frontend: React 18 + TypeScript + Vite, Tailwind v4, Radix primitives wrapped as shadcn-style components, React Router v6, TanStack Query, react-hook-form + zod, Framer Motion, lucide-react, sonner, Recharts, @dnd-kit, react-markdown.
 
-Backend: Firebase Auth + Firestore + Storage + Hosting, Cloud Functions on Node 20 / TypeScript, Stripe, Anthropic SDK, Resend + react-email.
+Backend: Firebase Auth + Firestore + Storage + Hosting, Cloud Functions on Node 20 / TypeScript, Stripe, an LLM SDK, Resend + react-email.
 
 Tests: Vitest, Playwright.
 
-Project lives at `/Users/adamdow/Documents/claude-projects/LBMA Demo Projects/coursestack`. STACK.md sits in the sibling `CourseStack - Membership : Education Platform/` directory and is the source of truth for stack and visual rules.
+Project lives at `this project Demo Projects/coursestack`. STACK.md sits in the sibling `CourseStack - Membership : Education Platform/` directory and is the source of truth for stack and visual rules.

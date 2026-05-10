@@ -1,5 +1,5 @@
 // AI client wrapper. In production this calls a Cloud Function which
-// holds the Anthropic key and uses prompt caching. In demo mode we return a
+// holds the LLM key and uses prompt caching. In demo mode we return a
 // realistic-feeling local response so the UI works end-to-end without keys.
 
 import type { Lesson } from '@/types';
