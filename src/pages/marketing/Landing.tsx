@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, BookOpen, Compass, Quote, Sparkles, Star } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MarketingNav } from '@/components/layout/MarketingNav';
@@ -9,9 +10,49 @@ import { demoStore } from '@/lib/store';
 import { formatNumber, formatMinutes } from '@/lib/utils';
 import { TIERS } from '@/lib/pricing';
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: EASE } },
+};
+const fadeUpSmall = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
+};
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
+};
+const sectionViewport = { once: true, amount: 0.2 };
+
+function useCountUp(value: number, duration = 1400) {
+  const reduce = useReducedMotion();
+  const [n, setN] = useState(reduce ? value : 0);
+  useEffect(() => {
+    if (reduce) { setN(value); return; }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setN(value * eased);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration, reduce]);
+  return n;
+}
+
+function StatNumber({ value, format }: { value: number; format: (n: number) => string }) {
+  const n = useCountUp(value);
+  return <p className="font-display text-title1 leading-none num">{format(n)}</p>;
+}
+
 export function Landing() {
   const courses = demoStore.listCourses().slice(0, 4);
   const instructors = demoStore.listAllUsers().filter((u) => u.roles.includes('instructor') && !u.roles.includes('admin'));
+  const lessonsTotal = courses.length * 18 + 14;
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -21,17 +62,17 @@ export function Landing() {
       <section className="relative overflow-hidden border-b border-rule">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 pb-24 pt-16 md:grid-cols-12 md:gap-16 md:pt-24">
           {/* Left: headline */}
-          <div className="md:col-span-7">
-            <p className="eyebrow num">Vol. I · Spring 2026 · No. 03</p>
-            <h1 className="display-headline mt-6 font-display text-[3.5rem] leading-[0.96] tracking-tight md:text-[5rem]">
+          <motion.div className="md:col-span-7" initial="hidden" animate="show" variants={staggerContainer}>
+            <motion.p className="eyebrow num" variants={fadeUpSmall}>Vol. I · Spring 2026 · No. 03</motion.p>
+            <motion.h1 className="display-headline mt-6 font-display text-[3.5rem] leading-[0.96] tracking-tight md:text-[5rem]" variants={fadeUp}>
               Courses for the<br />
               <em className="italic font-light text-terra-deep">already-working</em><br />
               professional.
-            </h1>
-            <p className="mt-8 max-w-xl text-title3 leading-relaxed text-ink-soft">
+            </motion.h1>
+            <motion.p className="mt-8 max-w-xl text-title3 leading-relaxed text-ink-soft" variants={fadeUp}>
               CourseStack is a small, deliberate library of courses for designers, engineers, operators, and founders who are past tutorial videos and tired of fluff. Six courses every quarter. No autoplay. No "level&nbsp;1&nbsp;of&nbsp;47."
-            </p>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
+            </motion.p>
+            <motion.div className="mt-10 flex flex-wrap items-center gap-4" variants={fadeUp}>
               <Button size="xl" variant="terra" asChild>
                 <Link to="/signup">
                   Start the trial
@@ -45,23 +86,23 @@ export function Landing() {
                 <Sparkles className="size-4 text-terra" />
                 14-day refund window. No platform fees, no upsells.
               </span>
-            </div>
+            </motion.div>
 
-            <div className="mt-14 grid max-w-xl grid-cols-3 gap-8 border-t border-rule pt-6">
+            <motion.div className="mt-14 grid max-w-xl grid-cols-3 gap-8 border-t border-rule pt-6" variants={fadeUp}>
               <div>
-                <p className="font-display text-title1 leading-none num">{formatNumber(courses.length * 18 + 14)}</p>
+                <StatNumber value={lessonsTotal} format={(n) => formatNumber(Math.round(n))} />
                 <p className="mt-1 text-caption text-ink-mute">Lessons in print</p>
               </div>
               <div>
-                <p className="font-display text-title1 leading-none num">14,128</p>
+                <StatNumber value={14128} format={(n) => formatNumber(Math.round(n))} />
                 <p className="mt-1 text-caption text-ink-mute">Reading members</p>
               </div>
               <div>
-                <p className="font-display text-title1 leading-none num">4.8</p>
+                <StatNumber value={4.8} format={(n) => n.toFixed(1)} />
                 <p className="mt-1 text-caption text-ink-mute">Median rating</p>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Right: layered course cards at slight angles */}
           <div className="relative md:col-span-5">
@@ -111,7 +152,7 @@ export function Landing() {
         </div>
 
         {/* Quote rule below hero */}
-        <div className="mx-auto max-w-7xl border-t border-rule px-6 py-6">
+        <motion.div className="mx-auto max-w-7xl border-t border-rule px-6 py-6" initial="hidden" whileInView="show" viewport={sectionViewport} variants={fadeUp}>
           <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between md:gap-8">
             <p className="font-display text-title3 italic text-ink-soft text-balance md:max-w-3xl">
               <Quote className="mr-2 inline size-5 -translate-y-1 text-terra" />
@@ -119,14 +160,14 @@ export function Landing() {
             </p>
             <p className="eyebrow whitespace-nowrap text-ink-mute">— A reader, on email</p>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* THE STACK — featured courses */}
       <section id="catalog" className="border-b border-rule">
         <div className="mx-auto max-w-7xl px-6 py-20">
-          <div className="mb-12 flex flex-col items-end justify-between gap-6 md:flex-row">
-            <div className="max-w-xl">
+          <motion.div className="mb-12 flex flex-col items-end justify-between gap-6 md:flex-row" initial="hidden" whileInView="show" viewport={sectionViewport} variants={staggerContainer}>
+            <motion.div className="max-w-xl" variants={fadeUp}>
               <p className="eyebrow">The Stack · Spring 2026</p>
               <h2 className="mt-2 font-display text-largeTitle leading-tight">
                 Six courses, chosen on purpose.
@@ -134,18 +175,26 @@ export function Landing() {
               <p className="mt-4 text-body text-ink-soft">
                 Not a marketplace. Every course is commissioned, edited, and held to the same craft bar a magazine would hold a feature.
               </p>
-            </div>
-            <Button variant="link" asChild>
-              <Link to="/catalog">View the full library →</Link>
-            </Button>
-          </div>
+            </motion.div>
+            <motion.div variants={fadeUpSmall}>
+              <Button variant="link" asChild>
+                <Link to="/catalog">View the full library →</Link>
+              </Button>
+            </motion.div>
+          </motion.div>
 
-          <div className="grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3">
+          <motion.div
+            className="grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3"
+            initial="hidden"
+            whileInView="show"
+            viewport={sectionViewport}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }}
+          >
             {demoStore.listCourses().map((c, i) => (
+              <motion.div key={c.id} variants={fadeUp}>
               <Link
                 to={`/courses/${c.slug}`}
-                key={c.id}
-                className="group relative flex flex-col bg-paper-soft p-7 transition-colors hover:bg-paper"
+                className="group relative flex h-full flex-col bg-paper-soft p-7 transition-colors hover:bg-paper"
               >
                 <div className="flex items-start justify-between">
                   <p className="eyebrow num">No. {String(i + 1).padStart(2, '0')} · {c.tags[0]}</p>
@@ -169,15 +218,16 @@ export function Landing() {
                   </span>
                 </div>
               </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* INSTRUCTORS — B&W portraits */}
       <section className="border-b border-rule bg-paper-soft">
         <div className="mx-auto max-w-7xl px-6 py-20">
-          <div className="mb-14 max-w-2xl">
+          <motion.div className="mb-14 max-w-2xl" initial="hidden" whileInView="show" viewport={sectionViewport} variants={fadeUp}>
             <p className="eyebrow">Faculty</p>
             <h2 className="mt-2 font-display text-largeTitle leading-tight">
               People who still ship.
@@ -185,11 +235,17 @@ export function Landing() {
             <p className="mt-4 text-body text-ink-soft">
               Every instructor on CourseStack works in the field they teach. We don't commission talking-head explainers.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid gap-12 md:grid-cols-3">
+          <motion.div
+            className="grid gap-12 md:grid-cols-3"
+            initial="hidden"
+            whileInView="show"
+            viewport={sectionViewport}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } } }}
+          >
             {instructors.map((inst) => (
-              <article key={inst.id} className="flex flex-col">
+              <motion.article key={inst.id} variants={fadeUp} className="flex flex-col">
                 <div className="aspect-[3/4] overflow-hidden rounded-md border border-rule">
                   {inst.avatarUrl && (
                     <img
@@ -203,27 +259,34 @@ export function Landing() {
                 <p className="mt-4 eyebrow">{inst.id === 'u_inst_ada' ? 'Brand & sales' : inst.id === 'u_inst_marco' ? 'Engineering' : 'Design'}</p>
                 <h3 className="mt-1 font-display text-title2 leading-tight">{inst.displayName}</h3>
                 <p className="mt-2 max-w-sm text-footnote leading-relaxed text-ink-soft">{inst.bio}</p>
-              </article>
+              </motion.article>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* PRICING */}
       <section id="pricing" className="border-b border-rule">
         <div className="mx-auto max-w-7xl px-6 py-20">
-          <div className="mb-14 max-w-xl">
+          <motion.div className="mb-14 max-w-xl" initial="hidden" whileInView="show" viewport={sectionViewport} variants={fadeUp}>
             <p className="eyebrow">Subscriptions</p>
             <h2 className="mt-2 font-display text-largeTitle leading-tight">Three ways to read.</h2>
             <p className="mt-4 text-body text-ink-soft">
               Annual billing knocks 20% off. Cancel from the customer portal at any time, no calls, no clawbacks.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <motion.div
+            className="grid gap-6 md:grid-cols-3"
+            initial="hidden"
+            whileInView="show"
+            viewport={sectionViewport}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } } }}
+          >
             {TIERS.map((t) => (
-              <div
+              <motion.div
                 key={t.id}
+                variants={fadeUp}
                 className={`relative flex flex-col rounded-md border p-8 ${
                   t.highlight ? 'border-ink bg-paper-soft shadow-xl' : 'border-rule bg-paper'
                 }`}
@@ -257,49 +320,55 @@ export function Landing() {
                     {t.id === 'free' ? 'Start with the free tier' : `Start with ${t.name}`}
                   </Link>
                 </Button>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* EDITORIAL ESSAY */}
       <section id="editorial" className="border-b border-rule bg-paper-soft">
-        <div className="mx-auto grid max-w-7xl gap-14 px-6 py-24 md:grid-cols-12">
-          <aside className="md:col-span-3">
+        <motion.div
+          className="mx-auto grid max-w-7xl gap-14 px-6 py-24 md:grid-cols-12"
+          initial="hidden"
+          whileInView="show"
+          viewport={sectionViewport}
+          variants={staggerContainer}
+        >
+          <motion.aside className="md:col-span-3" variants={fadeUpSmall}>
             <p className="eyebrow">The Quarterly · Editor's note</p>
             <p className="mt-4 text-caption text-ink-mute num">Issue 03 — March 2026</p>
             <p className="mt-2 text-caption text-ink-mute">
               By <span className="text-ink">Alex Rivera</span>
             </p>
-          </aside>
+          </motion.aside>
           <div className="md:col-span-9">
-            <h2 className="font-display text-largeTitle leading-tight max-w-3xl">
+            <motion.h2 className="font-display text-largeTitle leading-tight max-w-3xl" variants={fadeUp}>
               The case for the long-form course in a short-form decade.
-            </h2>
-            <div className="editorial-prose mt-8 max-w-3xl text-body text-ink-soft">
-              <p>
+            </motion.h2>
+            <motion.div className="editorial-prose mt-8 max-w-3xl text-body text-ink-soft" variants={staggerContainer}>
+              <motion.p variants={fadeUp}>
                 Most online courses today are built like content marketing — a hook, a tease, a CTA, a checkout. They're optimized for the moment of purchase, not the year of practice. The subtitle is a promise; the syllabus is a stack of exit ramps. Six months in, the customer has clicked through 47 lessons and learned nothing they couldn't have learned in a Tuesday afternoon read.
-              </p>
-              <p>
+              </motion.p>
+              <motion.p variants={fadeUp}>
                 We started CourseStack on a different hypothesis: that working professionals don't need more <em>content</em>; they need fewer, better courses they can sit with. A magazine you'd save on a shelf, in course form. Six new ones every quarter, each one held to the bar that a feature article in print would be held to.
-              </p>
-              <blockquote>
+              </motion.p>
+              <motion.blockquote variants={fadeUp}>
                 "Watch any number, when you're moving fast and breaking things, of demos you'll watch you'll never come back to. Then sit, once, with something good. The difference is the rest of your career."
-              </blockquote>
-              <p>
+              </motion.blockquote>
+              <motion.p variants={fadeUp}>
                 That's the whole pitch. The rest of this issue is the work itself.
-              </p>
-            </div>
+              </motion.p>
+            </motion.div>
 
-            <div className="mt-12 inline-flex items-center gap-2">
+            <motion.div className="mt-12 inline-flex items-center gap-2" variants={fadeUp}>
               <Compass className="size-4 text-terra" />
               <Link to="/catalog" className="font-medium underline-offset-4 decoration-terra decoration-2 hover:underline">
                 Continue to the catalog
               </Link>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       <Footer />
