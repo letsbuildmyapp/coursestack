@@ -5,7 +5,7 @@ const day = 86400000;
 
 const COVER = {
   business: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80&auto=format&fit=crop',
-  design: 'https://images.unsplash.com/photo-1561070791-2526d30994b8?w=1200&q=80&auto=format&fit=crop',
+  design: 'https://images.unsplash.com/photo-1559028012-481c04fa702d?w=1200&q=80&auto=format&fit=crop',
   coding: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80&auto=format&fit=crop',
   marketing: 'https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=1200&q=80&auto=format&fit=crop',
   photo: 'https://images.unsplash.com/photo-1519638831568-d9897f54ed69?w=1200&q=80&auto=format&fit=crop',
