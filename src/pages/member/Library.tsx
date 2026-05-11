@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { AppShell } from '@/components/layout/AppShell';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { demoStore } from '@/lib/store';
 import { formatMinutes } from '@/lib/utils';
+import { fadeUp, sectionViewport } from '@/lib/motion';
 
 export function Library() {
   const { user } = useAuth();
@@ -15,19 +17,26 @@ export function Library() {
 
   return (
     <AppShell pageEyebrow="My library">
-      <h1 className="font-display text-largeTitle leading-tight">Your library.</h1>
+      <motion.h1 className="font-display text-largeTitle leading-tight" initial="hidden" animate="show" variants={fadeUp}>Your library.</motion.h1>
 
       <section className="mt-10">
-        <p className="eyebrow">In progress</p>
+        <motion.p className="eyebrow" initial="hidden" whileInView="show" viewport={sectionViewport} variants={fadeUp}>In progress</motion.p>
         {inProgress.length === 0 ? (
           <p className="mt-3 text-footnote text-ink-mute">Nothing in progress yet.</p>
         ) : (
-          <div className="mt-4 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2">
+          <motion.div
+            className="mt-4 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2"
+            initial="hidden"
+            whileInView="show"
+            viewport={sectionViewport}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
+          >
             {inProgress.map((p) => {
               const c = demoStore.getCourse(p.courseId);
               if (!c) return null;
               return (
-                <Link to={`/courses/${c.slug}`} key={p.courseId} className="flex gap-4 bg-paper-soft p-5 hover:bg-paper">
+                <motion.div key={p.courseId} variants={fadeUp}>
+                <Link to={`/courses/${c.slug}`} className="flex h-full gap-4 bg-paper-soft p-5 hover:bg-paper">
                   <img src={c.coverImage} className="h-24 w-24 rounded-sm object-cover" alt="" />
                   <div className="min-w-0 flex-1">
                     <p className="text-caption text-ink-mute">{c.instructorName}</p>
@@ -36,21 +45,29 @@ export function Library() {
                     <p className="mt-2 text-caption num text-ink-mute">{p.completedLessonIds.length} of {c.totalLessons} lessons · {formatMinutes(c.estimatedMinutes)}</p>
                   </div>
                 </Link>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         )}
       </section>
 
       {completed.length > 0 && (
         <section className="mt-12">
-          <p className="eyebrow">Completed</p>
-          <div className="mt-4 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2">
+          <motion.p className="eyebrow" initial="hidden" whileInView="show" viewport={sectionViewport} variants={fadeUp}>Completed</motion.p>
+          <motion.div
+            className="mt-4 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2"
+            initial="hidden"
+            whileInView="show"
+            viewport={sectionViewport}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
+          >
             {completed.map((p) => {
               const c = demoStore.getCourse(p.courseId);
               if (!c) return null;
               return (
-                <Link to={`/courses/${c.slug}`} key={p.courseId} className="flex gap-4 bg-paper-soft p-5 hover:bg-paper">
+                <motion.div key={p.courseId} variants={fadeUp}>
+                <Link to={`/courses/${c.slug}`} className="flex h-full gap-4 bg-paper-soft p-5 hover:bg-paper">
                   <img src={c.coverImage} className="h-24 w-24 rounded-sm object-cover" alt="" />
                   <div className="min-w-0 flex-1">
                     <p className="text-caption text-ink-mute">{c.instructorName}</p>
@@ -58,9 +75,10 @@ export function Library() {
                     <Badge variant="success" className="mt-3">Completed</Badge>
                   </div>
                 </Link>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </section>
       )}
     </AppShell>

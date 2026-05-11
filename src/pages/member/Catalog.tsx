@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { AppShell } from '@/components/layout/AppShell';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { demoStore } from '@/lib/store';
 import { formatMinutes, formatNumber } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { Tier } from '@/types';
+import { fadeUp, fadeUpSmall, staggerContainer } from '@/lib/motion';
 
 const TOPIC_OPTIONS = ['all', 'business', 'design', 'coding', 'marketing', 'photo', 'productivity'] as const;
 
@@ -35,18 +37,18 @@ export function Catalog() {
 
   return (
     <AppShell pageEyebrow="The Library">
-      <div className="flex flex-col items-end justify-between gap-4 md:flex-row md:items-end" data-tour="catalog-header">
-        <div>
+      <motion.div className="flex flex-col items-end justify-between gap-4 md:flex-row md:items-end" data-tour="catalog-header" initial="hidden" animate="show" variants={staggerContainer}>
+        <motion.div variants={fadeUp}>
           <h1 className="font-display text-largeTitle leading-tight">Catalog.</h1>
           <p className="mt-1 text-body text-ink-soft">{formatNumber(courses.length)} courses, sorted by recency.</p>
-        </div>
-        <div className="relative w-full md:w-80">
+        </motion.div>
+        <motion.div className="relative w-full md:w-80" variants={fadeUpSmall}>
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-mute" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the library…" className="pl-9" />
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      <div className="mt-6 flex flex-wrap gap-3" data-tour="catalog-filters">
+      <motion.div className="mt-6 flex flex-wrap gap-3" data-tour="catalog-filters" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}>
         <FilterRow
           label="Topic"
           options={TOPIC_OPTIONS.map((t) => ({ value: t, label: t }))}
@@ -75,21 +77,27 @@ export function Catalog() {
           value={length}
           onChange={(v) => setLength(v as any)}
         />
-      </div>
+      </motion.div>
 
       {courses.length === 0 ? (
-        <div className="mt-16 rounded-md border border-dashed border-rule p-12 text-center">
+        <motion.div className="mt-16 rounded-md border border-dashed border-rule p-12 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
           <p className="eyebrow">Nothing matches</p>
           <h2 className="mt-2 font-display text-title2">Try a wider net.</h2>
           <p className="mt-2 text-footnote text-ink-mute">Clear a filter or two and it'll come right back.</p>
-        </div>
+        </motion.div>
       ) : (
-        <div className="mt-10 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          key={`${q}|${topic}|${tier}|${length}`}
+          className="mt-10 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3"
+          initial="hidden"
+          animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05, delayChildren: 0.3 } } }}
+        >
           {courses.map((c, i) => (
+            <motion.div key={c.id} variants={fadeUp}>
             <Link
-              key={c.id}
               to={`/courses/${c.slug}`}
-              className="group flex flex-col bg-paper-soft p-6 transition-colors hover:bg-paper"
+              className="group flex h-full flex-col bg-paper-soft p-6 transition-colors hover:bg-paper"
             >
               <div className="overflow-hidden rounded-sm">
                 <img src={c.coverImage} alt="" className="aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
@@ -114,8 +122,9 @@ export function Catalog() {
                 </span>
               </div>
             </Link>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </AppShell>
   );

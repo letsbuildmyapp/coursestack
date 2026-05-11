@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, BookOpen, Compass, Quote, Sparkles, Star } from 'lucide-react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MarketingNav } from '@/components/layout/MarketingNav';
@@ -9,43 +8,10 @@ import { Footer } from '@/components/layout/Footer';
 import { demoStore } from '@/lib/store';
 import { formatNumber, formatMinutes } from '@/lib/utils';
 import { TIERS } from '@/lib/pricing';
-
-const EASE = [0.22, 1, 0.36, 1] as const;
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: EASE } },
-};
-const fadeUpSmall = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
-};
-const staggerContainer = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
-};
-const sectionViewport = { once: true, amount: 0.2 };
-
-function useCountUp(value: number, duration = 1400) {
-  const reduce = useReducedMotion();
-  const [n, setN] = useState(reduce ? value : 0);
-  useEffect(() => {
-    if (reduce) { setN(value); return; }
-    let raf = 0;
-    const start = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / duration);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setN(value * eased);
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value, duration, reduce]);
-  return n;
-}
+import { fadeUp, fadeUpSmall, staggerContainer, sectionViewport, useCountUp } from '@/lib/motion';
 
 function StatNumber({ value, format }: { value: number; format: (n: number) => string }) {
-  const n = useCountUp(value);
+  const n = useCountUp(value, 1400);
   return <p className="font-display text-title1 leading-none num">{format(n)}</p>;
 }
 
