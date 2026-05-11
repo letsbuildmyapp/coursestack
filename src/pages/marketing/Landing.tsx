@@ -151,13 +151,13 @@ export function Landing() {
 
           <motion.div
             className="grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3"
-            initial="hidden"
-            whileInView="show"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={sectionViewport}
-            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
           >
             {demoStore.listCourses().map((c, i) => (
-              <motion.div key={c.id} variants={fadeUp}>
+              <div key={c.id}>
               <Link
                 to={`/courses/${c.slug}`}
                 className="group relative flex h-full flex-col bg-paper-soft p-7 transition-colors hover:bg-paper"
@@ -184,7 +184,7 @@ export function Landing() {
                   </span>
                 </div>
               </Link>
-              </motion.div>
+              </div>
             ))}
           </motion.div>
         </div>

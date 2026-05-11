@@ -26,16 +26,16 @@ export function Library() {
         ) : (
           <motion.div
             className="mt-4 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2"
-            initial="hidden"
-            whileInView="show"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={sectionViewport}
-            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
           >
             {inProgress.map((p) => {
               const c = demoStore.getCourse(p.courseId);
               if (!c) return null;
               return (
-                <motion.div key={p.courseId} variants={fadeUp}>
+                <div key={p.courseId}>
                 <Link to={`/courses/${c.slug}`} className="flex h-full gap-4 bg-paper-soft p-5 hover:bg-paper">
                   <img src={c.coverImage} className="h-24 w-24 rounded-sm object-cover" alt="" />
                   <div className="min-w-0 flex-1">
@@ -45,7 +45,7 @@ export function Library() {
                     <p className="mt-2 text-caption num text-ink-mute">{p.completedLessonIds.length} of {c.totalLessons} lessons · {formatMinutes(c.estimatedMinutes)}</p>
                   </div>
                 </Link>
-                </motion.div>
+                </div>
               );
             })}
           </motion.div>
@@ -57,16 +57,16 @@ export function Library() {
           <motion.p className="eyebrow" initial="hidden" whileInView="show" viewport={sectionViewport} variants={fadeUp}>Completed</motion.p>
           <motion.div
             className="mt-4 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2"
-            initial="hidden"
-            whileInView="show"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={sectionViewport}
-            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
           >
             {completed.map((p) => {
               const c = demoStore.getCourse(p.courseId);
               if (!c) return null;
               return (
-                <motion.div key={p.courseId} variants={fadeUp}>
+                <div key={p.courseId}>
                 <Link to={`/courses/${c.slug}`} className="flex h-full gap-4 bg-paper-soft p-5 hover:bg-paper">
                   <img src={c.coverImage} className="h-24 w-24 rounded-sm object-cover" alt="" />
                   <div className="min-w-0 flex-1">
@@ -75,7 +75,7 @@ export function Library() {
                     <Badge variant="success" className="mt-3">Completed</Badge>
                   </div>
                 </Link>
-                </motion.div>
+                </div>
               );
             })}
           </motion.div>

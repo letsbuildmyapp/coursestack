@@ -89,12 +89,12 @@ export function Catalog() {
         <motion.div
           key={`${q}|${topic}|${tier}|${length}`}
           className="mt-10 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3"
-          initial="hidden"
-          animate="show"
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05, delayChildren: 0.3 } } }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
         >
           {courses.map((c, i) => (
-            <motion.div key={c.id} variants={fadeUp}>
+            <div key={c.id}>
             <Link
               to={`/courses/${c.slug}`}
               className="group flex h-full flex-col bg-paper-soft p-6 transition-colors hover:bg-paper"
@@ -122,7 +122,7 @@ export function Catalog() {
                 </span>
               </div>
             </Link>
-            </motion.div>
+            </div>
           ))}
         </motion.div>
       )}

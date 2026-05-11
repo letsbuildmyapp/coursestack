@@ -134,17 +134,17 @@ export function MemberDashboard() {
         ) : (
           <motion.div
             className="mt-6 grid gap-px overflow-hidden rounded-md border border-rule bg-rule md:grid-cols-2"
-            initial="hidden"
-            whileInView="show"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={sectionViewport}
-            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
           >
             {inProgress.map((p) => {
               const c = demoStore.getCourse(p.courseId);
               if (!c) return null;
               const next = c.modules.flatMap((m) => m.lessons).find((l) => !p.completedLessonIds.includes(l.id));
               return (
-                <motion.div key={p.courseId} variants={fadeUp}>
+                <div key={p.courseId}>
                 <Link
                   to={next ? `/learn/${c.slug}/${next.id}` : `/courses/${c.slug}`}
                   className="flex h-full gap-4 bg-paper-soft p-5 hover:bg-paper"
@@ -159,7 +159,7 @@ export function MemberDashboard() {
                     </p>
                   </div>
                 </Link>
-                </motion.div>
+                </div>
               );
             })}
           </motion.div>
