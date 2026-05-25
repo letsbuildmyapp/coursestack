@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { demoStore } from '@/lib/store';
+import { userTierGrants } from '@/lib/access';
 import { formatMinutes, formatNumber } from '@/lib/utils';
 import { fadeUp, staggerContainer, sectionViewport, useCountUp } from '@/lib/motion';
 
@@ -36,6 +37,7 @@ export function MemberDashboard() {
   // Continue learning
   const top = inProgress[0];
   const topCourse = top ? demoStore.getCourse(top.courseId) : null;
+  const topCourseLocked = !!(topCourse && !userTierGrants(user, topCourse.tier));
   let nextLessonHref = '/catalog';
   let nextLessonTitle = '';
   let nextModuleTitle = '';
@@ -45,7 +47,7 @@ export function MemberDashboard() {
       allLessons.find(({ l }) => l.id === top!.lastLessonId) ??
       allLessons.find(({ l }) => !top!.completedLessonIds.includes(l.id)) ??
       allLessons[0];
-    nextLessonHref = `/learn/${topCourse.slug}/${nextEntry!.l.id}`;
+    nextLessonHref = topCourseLocked ? '/account/billing' : `/learn/${topCourse.slug}/${nextEntry!.l.id}`;
     nextLessonTitle = nextEntry!.l.title;
     nextModuleTitle = nextEntry!.m.title;
   }
@@ -86,7 +88,7 @@ export function MemberDashboard() {
                 <div className="mt-6 flex items-center gap-3">
                   <Button size="lg" variant="terra" asChild>
                     <Link to={nextLessonHref}>
-                      Resume lesson <ArrowRight className="size-4" />
+                      {topCourseLocked ? 'Upgrade to resume' : 'Resume lesson'} <ArrowRight className="size-4" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="ghost" asChild>
@@ -143,15 +145,22 @@ export function MemberDashboard() {
               const c = demoStore.getCourse(p.courseId);
               if (!c) return null;
               const next = c.modules.flatMap((m) => m.lessons).find((l) => !p.completedLessonIds.includes(l.id));
+              const locked = !userTierGrants(user, c.tier);
+              const href = locked
+                ? `/courses/${c.slug}`
+                : next ? `/learn/${c.slug}/${next.id}` : `/courses/${c.slug}`;
               return (
                 <div key={p.courseId}>
                 <Link
-                  to={next ? `/learn/${c.slug}/${next.id}` : `/courses/${c.slug}`}
+                  to={href}
                   className="flex h-full gap-4 bg-paper-soft p-5 hover:bg-paper"
                 >
                   <img src={c.coverImage} className="h-24 w-24 flex-shrink-0 rounded-sm object-cover" alt="" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-caption text-ink-mute">{c.instructorName}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-caption text-ink-mute">{c.instructorName}</p>
+                      {locked && <Badge variant="outline" className="uppercase tracking-[0.06em]">{c.tier} locked</Badge>}
+                    </div>
                     <h3 className="mt-0.5 font-display text-title3 leading-tight text-ink line-clamp-2">{c.title}</h3>
                     <Progress value={p.percentComplete * 100} className="mt-3" />
                     <p className="mt-2 text-caption num text-ink-mute">

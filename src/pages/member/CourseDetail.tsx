@@ -154,11 +154,24 @@ export function CourseDetail() {
                 <p className="mt-2 text-caption num text-ink-mute">
                   {progress.completedLessonIds.length} of {course.totalLessons} complete
                 </p>
-                <Button variant="terra" size="lg" className="mt-5 w-full" asChild>
-                  <Link to={firstLesson ? `/learn/${course.slug}/${progress.lastLessonId ?? firstLesson.id}` : '#'}>
-                    Continue <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
+                {userHasTier || course.tier === 'free' ? (
+                  <Button variant="terra" size="lg" className="mt-5 w-full" asChild>
+                    <Link to={firstLesson ? `/learn/${course.slug}/${progress.lastLessonId ?? firstLesson.id}` : '#'}>
+                      Continue <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <p className="mt-4 text-caption text-ink-mute">
+                      Resuming requires the <span className="font-medium text-ink capitalize">{course.tier}</span> plan.
+                    </p>
+                    <Button variant="terra" size="lg" className="mt-3 w-full" asChild>
+                      <Link to="/account/billing">
+                        Upgrade to resume <ArrowRight className="size-4" />
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </>
             ) : (
               <>

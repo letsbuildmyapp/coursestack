@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { demoStore } from '@/lib/store';
+import { userTierGrants } from '@/lib/access';
 import { formatMinutes } from '@/lib/utils';
 import { fadeUp, sectionViewport } from '@/lib/motion';
 
@@ -34,12 +35,16 @@ export function Library() {
             {inProgress.map((p) => {
               const c = demoStore.getCourse(p.courseId);
               if (!c) return null;
+              const locked = !userTierGrants(user, c.tier);
               return (
                 <div key={p.courseId}>
                 <Link to={`/courses/${c.slug}`} className="flex h-full gap-4 bg-paper-soft p-5 hover:bg-paper">
                   <img src={c.coverImage} className="h-24 w-24 rounded-sm object-cover" alt="" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-caption text-ink-mute">{c.instructorName}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-caption text-ink-mute">{c.instructorName}</p>
+                      {locked && <Badge variant="outline" className="uppercase tracking-[0.06em]">{c.tier} locked</Badge>}
+                    </div>
                     <h3 className="mt-0.5 font-display text-title3 leading-tight line-clamp-2">{c.title}</h3>
                     <Progress value={p.percentComplete * 100} className="mt-3" />
                     <p className="mt-2 text-caption num text-ink-mute">{p.completedLessonIds.length} of {c.totalLessons} lessons · {formatMinutes(c.estimatedMinutes)}</p>
