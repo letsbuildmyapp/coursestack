@@ -51,7 +51,7 @@ export function NewCourse() {
           order: li,
           type: l.type,
           content: l.type === 'text' ? '## Lesson body\n\nWrite your lesson here.' : '',
-          videoUrl: l.type === 'video' ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4' : undefined,
+          videoUrl: l.type === 'video' ? 'https://media.w3.org/2010/05/sintel/trailer.mp4' : undefined,
           questions: l.type === 'quiz' ? [{ id: `q_${id}`, prompt: 'Sample', options: ['A', 'B', 'C'], correctIndex: 0 }] : undefined,
           durationMinutes: l.durationMinutes,
           isFreePreview: mi === 0 && li === 0,

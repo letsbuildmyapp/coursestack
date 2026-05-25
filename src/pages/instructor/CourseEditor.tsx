@@ -130,7 +130,7 @@ export function CourseEditor() {
             isFreePreview: false,
           };
           if (type === 'quiz') lesson.questions = [{ id: `q_${Date.now()}`, prompt: 'Sample question', options: ['One', 'Two', 'Three'], correctIndex: 0 }];
-          if (type === 'video') lesson.videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4';
+          if (type === 'video') lesson.videoUrl = 'https://media.w3.org/2010/05/sintel/trailer.mp4';
           return { ...m, lessons: [...m.lessons, lesson] };
         }),
       };

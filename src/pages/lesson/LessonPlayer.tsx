@@ -119,7 +119,7 @@ export function LessonPlayer() {
         <div className="min-w-0 px-5 py-8 md:px-10 md:py-12">
           <div className="mx-auto max-w-3xl">
             <p className="eyebrow">{cur.module.title}</p>
-            <h1 className="mt-2 font-display text-largeTitle leading-tight md:text-display">{cur.lesson.title}</h1>
+            <h1 className="mt-2 font-display text-largeTitle leading-tight xl:text-display">{cur.lesson.title}</h1>
             <p className="mt-3 text-caption num text-ink-mute">{formatMinutes(cur.lesson.durationMinutes)} · {cur.lesson.type}</p>
 
             <div className="mt-10">
@@ -129,9 +129,10 @@ export function LessonPlayer() {
             {/* Footer nav */}
             <footer className="mt-16 flex items-center justify-between gap-3 border-t border-rule pt-6">
               {prev ? (
-                <Button asChild variant="ghost">
-                  <Link to={`/learn/${course.slug}/${prev.lesson.id}`}>
-                    <ChevronLeft className="size-4" /> {prev.lesson.title}
+                <Button asChild variant="ghost" className="min-w-0 max-w-[40%] sm:max-w-[50%]">
+                  <Link to={`/learn/${course.slug}/${prev.lesson.id}`} className="min-w-0">
+                    <ChevronLeft className="size-4 flex-shrink-0" />
+                    <span className="hidden truncate sm:inline">{prev.lesson.title}</span>
                   </Link>
                 </Button>
               ) : <div />}
