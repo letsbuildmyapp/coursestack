@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   DndContext,
   closestCenter,
@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { demoStore } from '@/lib/store';
 import { toast } from 'sonner';
@@ -32,8 +33,10 @@ import type { Course, Lesson, Module } from '@/types';
 export function CourseEditor() {
   const { courseId } = useParams<{ courseId: string }>();
   const { user } = useAuth();
+  const nav = useNavigate();
   const original = courseId ? demoStore.getCourse(courseId) : null;
   const [course, setCourse] = useState<Course | null>(original);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
   if (!course) {
@@ -88,6 +91,13 @@ export function CourseEditor() {
       }
       return c;
     });
+  }
+
+  function confirmDelete() {
+    if (!course) return;
+    demoStore.deleteCourse(course.id);
+    toast.success('Course deleted.');
+    nav('/instructor');
   }
 
   function save() {
@@ -171,6 +181,9 @@ export function CourseEditor() {
           <p className="mt-1 text-footnote text-ink-mute num">/{course.slug} · {formatNumber(enrolledStudents.length)} enrolled</p>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={() => setDeleteOpen(true)} className="text-danger hover:bg-danger/10 hover:text-danger">
+            <Trash2 className="size-4" /> Delete
+          </Button>
           <Button variant={course.published ? 'outline' : 'terra'} onClick={() => { demoStore.togglePublished(course.id); setCourse((c) => c ? { ...c, published: !c.published } : c); toast.success(course.published ? 'Unpublished.' : 'Published.'); }}>
             {course.published ? 'Unpublish' : 'Publish'}
           </Button>
@@ -281,6 +294,23 @@ export function CourseEditor() {
           <Badge>{course.published ? 'Published' : 'Draft'}</Badge>
         </aside>
       </div>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete this course?</DialogTitle>
+            <DialogDescription>
+              <span className="font-medium text-ink">{course.title}</span> and all of its modules, lessons, enrollments, progress, and notes will be removed. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              <Trash2 className="size-4" /> Delete course
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

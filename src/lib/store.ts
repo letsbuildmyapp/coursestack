@@ -181,6 +181,16 @@ export const demoStore = {
     emit();
   },
 
+  deleteCourse(courseId: string) {
+    const course = state.courses.find((c) => c.id === courseId);
+    const lessonIds = new Set(course?.modules.flatMap((m) => m.lessons.map((l) => l.id)) ?? []);
+    state.courses = state.courses.filter((c) => c.id !== courseId);
+    state.progress = state.progress.filter((p) => p.courseId !== courseId);
+    state.enrollments = state.enrollments.filter((e) => e.courseId !== courseId);
+    state.notes = state.notes.filter((n) => !lessonIds.has(n.lessonId));
+    emit();
+  },
+
   // Progress + enrollment
   getProgress(userId: string, courseId: string): Progress | null {
     return state.progress.find((p) => p.userId === userId && p.courseId === courseId) ?? null;
