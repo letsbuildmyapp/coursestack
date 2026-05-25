@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Wand2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/input';
@@ -116,39 +117,92 @@ export function NewCourse() {
         </div>
 
         <div data-tour="outline-output">
-          {draft ? (
-            <div className="rounded-md border border-rule bg-paper-soft p-6">
-              <div className="flex items-center justify-between">
-                <Badge variant="terra"><Sparkles className="size-3" /> Draft</Badge>
-                <Button variant="terra" onClick={commit}>Create this course</Button>
-              </div>
-              <h2 className="mt-4 font-display text-title1 leading-tight">{draft.title}</h2>
-              <ol className="mt-6 space-y-4">
-                {draft.modules.map((m, mi) => (
-                  <li key={mi} className="rounded-md border border-rule bg-paper p-4">
-                    <p className="eyebrow num">Module {String(mi + 1).padStart(2, '0')}</p>
-                    <h3 className="mt-1 font-display text-title3 leading-tight">{m.title}</h3>
-                    <ul className="mt-3 space-y-1.5 text-footnote">
-                      {m.lessons.map((l, li) => (
-                        <li key={li} className="flex items-center justify-between">
-                          <span><span className="num text-ink-mute mr-2">{String(li + 1).padStart(2, '0')}</span>{l.title}</span>
-                          <span className="text-caption text-ink-mute capitalize num">{l.type} · {l.durationMinutes}m</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ) : (
-            <div className="grid h-full place-items-center rounded-md border border-dashed border-rule p-12 text-center">
-              <div>
-                <Sparkles className="mx-auto size-8 text-terra" />
-                <p className="mt-3 eyebrow">Outline preview</p>
-                <p className="mt-2 max-w-xs text-footnote text-ink-mute">Generate from the left to populate this panel.</p>
-              </div>
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {draft ? (
+              <motion.div
+                key="draft"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="rounded-md border border-rule bg-paper-soft p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <Badge variant="terra"><Sparkles className="size-3" /> Draft</Badge>
+                  <Button variant="terra" onClick={commit}>Create this course</Button>
+                </div>
+                <motion.h2
+                  className="mt-4 font-display text-title1 leading-tight"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+                >
+                  {draft.title}
+                </motion.h2>
+                <motion.ol
+                  className="mt-6 space-y-4"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: {},
+                    visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
+                  }}
+                >
+                  {draft.modules.map((m, mi) => (
+                    <motion.li
+                      key={mi}
+                      className="rounded-md border border-rule bg-paper p-4"
+                      variants={{
+                        hidden: { opacity: 0, y: 14 },
+                        visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+                      }}
+                    >
+                      <p className="eyebrow num">Module {String(mi + 1).padStart(2, '0')}</p>
+                      <h3 className="mt-1 font-display text-title3 leading-tight">{m.title}</h3>
+                      <motion.ul
+                        className="mt-3 space-y-1.5 text-footnote"
+                        initial="hidden"
+                        animate="visible"
+                        variants={{
+                          hidden: {},
+                          visible: { transition: { staggerChildren: 0.04, delayChildren: 0.15 } },
+                        }}
+                      >
+                        {m.lessons.map((l, li) => (
+                          <motion.li
+                            key={li}
+                            className="flex items-center justify-between"
+                            variants={{
+                              hidden: { opacity: 0, x: -6 },
+                              visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: 'easeOut' } },
+                            }}
+                          >
+                            <span><span className="num text-ink-mute mr-2">{String(li + 1).padStart(2, '0')}</span>{l.title}</span>
+                            <span className="text-caption text-ink-mute capitalize num">{l.type} · {l.durationMinutes}m</span>
+                          </motion.li>
+                        ))}
+                      </motion.ul>
+                    </motion.li>
+                  ))}
+                </motion.ol>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="grid h-full place-items-center rounded-md border border-dashed border-rule p-12 text-center"
+              >
+                <div>
+                  <Sparkles className="mx-auto size-8 text-terra" />
+                  <p className="mt-3 eyebrow">Outline preview</p>
+                  <p className="mt-2 max-w-xs text-footnote text-ink-mute">Generate from the left to populate this panel.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </AppShell>
