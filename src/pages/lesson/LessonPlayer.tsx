@@ -258,12 +258,20 @@ function VideoLesson({ lesson, courseId, userId }: { lesson: Lesson; courseId: s
   const ref = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    if (!ref.current || !userId) return;
-    const startAt = demoStore.getProgress(userId, courseId)?.videoPositions[lesson.id];
-    if (typeof startAt === 'number') {
-      try { ref.current.currentTime = startAt; } catch { /* ignore */ }
+    const v = ref.current;
+    if (!v) return;
+    v.muted = true;
+    if (userId) {
+      const startAt = demoStore.getProgress(userId, courseId)?.videoPositions[lesson.id];
+      if (typeof startAt === 'number') {
+        try { v.currentTime = startAt; } catch { /* ignore */ }
+      }
     }
-  }, [userId, courseId, lesson.id]);
+    const tryPlay = () => v.play().catch(() => { /* autoplay blocked — user can press play */ });
+    if (v.readyState >= 2) tryPlay();
+    else v.addEventListener('loadeddata', tryPlay, { once: true });
+    return () => v.removeEventListener('loadeddata', tryPlay);
+  }, [userId, courseId, lesson.id, lesson.videoUrl]);
 
   useEffect(() => {
     if (!userId) return;
@@ -286,6 +294,7 @@ function VideoLesson({ lesson, courseId, userId }: { lesson: Lesson; courseId: s
     <div data-tour="lesson-body">
       <video
         ref={ref}
+        key={lesson.id}
         src={lesson.videoUrl}
         controls
         autoPlay
