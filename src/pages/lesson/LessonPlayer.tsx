@@ -288,6 +288,7 @@ function VideoLesson({ lesson, courseId, userId }: { lesson: Lesson; courseId: s
         ref={ref}
         src={lesson.videoUrl}
         controls
+        autoPlay
         playsInline
         className="aspect-video w-full rounded-md bg-ink"
       >
