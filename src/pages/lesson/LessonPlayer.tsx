@@ -289,6 +289,7 @@ function VideoLesson({ lesson, courseId, userId }: { lesson: Lesson; courseId: s
         src={lesson.videoUrl}
         controls
         autoPlay
+        muted
         playsInline
         className="aspect-video w-full rounded-md bg-ink"
       >
